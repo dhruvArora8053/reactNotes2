@@ -61,82 +61,37 @@ export default function App() {
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState(null);
 
-  // fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
-  //   .then((res) => res.json())
-  //   .then((data) => setMovies(data.Search));
-  // when we check out the network tab so you see that it's basically running an infinite number of requests here so it keeps going and it never really stops so every second our app is firing off multiple fetch requests to this API which ofcourse is a really bad idea so why do you think all these fetch requests are being fired off well the reason is that setting the state here in the render logic will then immediately cause the component to rerender itself again so that's just how state works however as the components is re-rendered the function here ofcourse is executed again which then will fetch again which in turn will set the movies again as well and then this whole thing starts over and over again so as the state is that the component is re-rendered again, which then will fetch again which will set the movies again and so this really is an infinite loop of state setting and then the component re-rendering and so this is the reason why it is really not allowed to set state in render logic.
+  // const tempQuery = "interstellar";
 
-  // setWatched([]);
-  // same problem, now we do get a real error, here we are now reloading all the time again the data from the API but what matters here is that we got the error of too many re-renders and that's because of above state setting, so if we're really setting the state here in the top level, even without being inside a then handler then immediately react will complain that there are too many renders, which means that we again entered that infinite loop where updating state will cause the component to render which will cost the state to be set and so on to infinity.
-
-  // useffect to the rescue:-
-  // useEffect(function () {
-  //   fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
-  //     .then((res) => res.json())
-  //     .then((data) => setMovies(data.Search));
-  // }, []);
-  // now we have no more infinite loops here and no more infinite requests to our API, so now our effect is only running as the component mounts, so again we used the use effect hook to register an effect and that effect is the function inside of it which contains the side effect that we want to register and basically register means that we want this code here not to run as the component renders but actually after it has been painted onto the screen and so that's exactly what useeffect does so while before the code was executed while the component was rendering so while the function was being executed, now this effect will actually be executed after render and that's a lot better then as a second argument we passed this empty array here into useeffect and so this means that this effect will only be executed as the component first mounts.
-
-  useEffect(function () {
-    console.log("A: after initial render");
-  }, []);
-
-  useEffect(function () {
-    console.log("B: after every render");
-  });
-
-  useEffect(
-    function () {
-      console.log("D");
-    },
-    [query]
-  );
-
-  console.log("C: during render");
-  // so why did we get C first, even though it appears later here in code, well the reason is that as we just discuessed before effects actually only run after the browser paint while the render logic itself runs well as the name says during render and so then it makes sense that ofcourse this console.log() here is executed first so during the render of this component and then we have A and B which comes form above two effects and so A is rendered first simply because it appears first in the code
-
-  // and when we type on search bar something, so we update the state here which is the query state and as a result the component was re-rendered and then just like before C was executed and so therefore we see the letter C first and then after that we also have a B log so B has no dependency array which remember basically means that this effect is synchronized with everything and so therefore it needs to run on every render while the other effect A is synchronized with no variables at all which is the meaning of this empty array and therefore this effect was not executed as the component was re-rendered with the query state
-
-  // now the D will be executed every time the query state will change, so now D useeffect is synchronized with the query state
+  // const res = await fetch(
+  //           `http://www.omdbapi.com/?apikey=${KEY}&s=${tempQuery}`
+  //         );
 
   function handleSelectMovie(id) {
-    setSelectedId((selectedId) => (selectedId === id ? null : id));
+    setSelectedId((selectedId) => (id === selectedId ? null : id));
   }
 
   function handleCloseMovie() {
     setSelectedId(null);
   }
 
-  function handleAddWatched(movie) {
-    setWatched((watched) => [...watched, movie]);
-  }
-
-  const tempQuery = "interstellar";
   useEffect(
     function () {
       async function fetchMovies() {
         try {
           setIsLoading(true);
           setError("");
-
           const res = await fetch(
             `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
           );
 
           if (!res.ok)
-            throw new Error("something went wrong with fetching movies");
+            throw new Error("Something went wrong with fetching movies");
 
           const data = await res.json();
-
           if (data.Response === "False") throw new Error("Movie not found");
-
           setMovies(data.Search);
-          // console.log(data);
-
-          // console.log(movies);
-          // now why are we getting empty array: after the state has been set in the setMovies that doesn't means data fetchs immediately so this will happen after this function here is called and so right now in console.log we have a stale state which basically means that we still have the old value as the state was before and in this case before it was just an empty array so our initial state
         } catch (err) {
-          // console.err(err.message);
           setError(err.message);
         } finally {
           setIsLoading(false);
@@ -175,7 +130,6 @@ export default function App() {
             <MovieDetails
               selectedId={selectedId}
               onCloseMovie={handleCloseMovie}
-              onAddWatched={handleAddWatched}
             />
           ) : (
             <>
@@ -282,7 +236,7 @@ function MovieList({ movies, onSelectMovie }) {
   return (
     <ul className="list list-movies">
       {movies?.map((movie) => (
-        <Movie movie={movie} onSelectMovie={onSelectMovie} key={movie.imdbID} />
+        <Movie movie={movie} key={movie.imdbID} onSelectMovie={onSelectMovie} />
       ))}
     </ul>
   );
@@ -303,7 +257,7 @@ function Movie({ movie, onSelectMovie }) {
   );
 }
 
-function MovieDetails({ selectedId, onCloseMovie, onAddWatched }) {
+function MovieDetails({ selectedId, onCloseMovie }) {
   const [movie, setMovie] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -317,10 +271,10 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched }) {
     Released: released,
     Actors: actors,
     Director: director,
-    Genere: genere,
+    Genre: genre,
   } = movie;
 
-  function handleAdd() {}
+  console.log(title, year);
 
   useEffect(
     function () {
@@ -337,8 +291,6 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched }) {
     },
     [selectedId]
   );
-  // if we click on another movie then we get the same problem here our component is not updating, well we told our effect here to load the movie data whenever the componet first mounts however when we click here one of these other movies, this componet is actually not mount again so the inital render will not happen again because the component is already mounted and the reason for that is the one that we learned in the previous section, it is because this component here so the movie detail component is rendered in exactly the same place in the component tree and so as we clik here on another movie simply another prop will be passed into the component but the component itself will not be destroyed, it will stay in the component tree and so the only thing that is changing as we click on of the other movies is the ID prop that is being passed in so therefore right now this effect here will not run again because again it is only running when the component mounts which really only happens once and ofcourse if we close this component and then go to another one then the component has been unmounted first and then it is mounting again and so therefore then it is going to work so how do we solve this?
-  // if we pass the selectedId in the dependency array, now as the selectedId prop changes then the effect will indeed be executed again because remember this dependency array is a little bit like an event listener that is litening for one of the dependencies to change
 
   return (
     <div className="details">
@@ -350,13 +302,13 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched }) {
             <button className="btn-back" onClick={onCloseMovie}>
               &larr;
             </button>
-            <img src={poster} alt={`poster of ${movie}`} />
+            <img src={poster} alt={`Poster of ${movie} movie`} />
             <div className="details-overview">
               <h2>{title}</h2>
               <p>
                 {released} &bull; {runtime}
               </p>
-              <p>{genere}</p>
+              <p>{genre}</p>
               <p>
                 <span>⭐</span>
                 {imdbRating} IMDb rating
@@ -367,9 +319,6 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched }) {
           <section>
             <div className="rating">
               <StarRating maxRating={10} size={24} />
-              <button className="btn-add" onClick={handleAdd}>
-                + Add to list
-              </button>
             </div>
             <p>
               <em>{plot}</em>
@@ -379,6 +328,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched }) {
           </section>
         </>
       )}
+      {/* {selectedId} */}
     </div>
   );
 }
