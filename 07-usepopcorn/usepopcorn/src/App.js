@@ -367,6 +367,21 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
   // if we click on another movie then we get the same problem here our component is not updating, well we told our effect here to load the movie data whenever the componet first mounts however when we click here one of these other movies, this componet is actually not mount again so the inital render will not happen again because the component is already mounted and the reason for that is the one that we learned in the previous section, it is because this component here so the movie detail component is rendered in exactly the same place in the component tree and so as we clik here on another movie simply another prop will be passed into the component but the component itself will not be destroyed, it will stay in the component tree and so the only thing that is changing as we click on of the other movies is the ID prop that is being passed in so therefore right now this effect here will not run again because again it is only running when the component mounts which really only happens once and ofcourse if we close this component and then go to another one then the component has been unmounted first and then it is mounting again and so therefore then it is going to work so how do we solve this?
   // if we pass the selectedId in the dependency array, now as the selectedId prop changes then the effect will indeed be executed again because remember this dependency array is a little bit like an event listener that is litening for one of the dependencies to change
 
+  // Changing the page title in the browser so outside of the application is a side effect because we are very clearly going to interact with the outside world so basically with the world outside of our react application and so this is then considered a side effect so what this means is that we will want to register a side effect using again the useeffect hook:
+  useEffect(
+    function () {
+      if (!title) return;
+      document.title = `Movie | ${title}`;
+
+      // cleanup function
+      return function () {
+        document.title = "usePopcorn";
+        console.log(`Clean up effect for movie ${title}`);
+      };
+    },
+    [title]
+  );
+
   return (
     <div className="details">
       {isLoading ? (
