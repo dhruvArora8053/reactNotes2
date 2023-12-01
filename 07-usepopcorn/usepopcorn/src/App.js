@@ -7,7 +7,7 @@ const average = (arr) =>
 const KEY = "24a2b866";
 
 export default function App() {
-  const [query, setQuery] = useState("inception");
+  const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -24,6 +24,10 @@ export default function App() {
 
   function handleAddWatched(movie) {
     setWatched((watched) => [...watched, movie]);
+
+    // local storage is just a very simple key value pair storage that is available in the browser and where we can store some data for each domain so basically the data that we store in local storage now will only be available to exactly this application url
+    localStorage.setItem("watched", JSON.stringify([...watched, movie]));
+    // we need to convert all of the data into string because in local storage we can only store key value pairs where the value is a string
   }
 
   function handleDeleteWatched(id) {
@@ -232,6 +236,28 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
     Genere: genere,
   } = movie;
 
+  // 1.
+  // /* eslint-disable*/
+  // if (imdbRating > 8) [isTop, setIsTop] = useState(true);
+  // as soon as the data arrived the imdb rating was indeed greater than eight and so then react called usestate here and so then on the next render the fourth hook was no longer the useeffect but this state right above so now we can clearly see that our linked list of hooks is different and so react is not happy about that at all
+
+  // if (imdbRating > 8) return <p>Greatest ever!</p>;
+  // this time it gives the error, fewer hooks were actually rendered and so that's becuase right now we only have above three states but then the 3 effects that we had they are now no longer created, so instead of 6 hooks now we only have 3 hooks and so therefore this again creates a big problem because like this, we cannot guarantee that all the hooks are always called in the same order so be very careful of that
+
+  // const [isTop, setIsTop] = useState(imdbRating > 8);
+  // console.log(isTop);
+  // now this log is showing false, event though when we click on interstellar the rating here is greater than 8, so why is that, well it is because of the reason which is the fact that whatever we pass into usestate is the initial state and react will only look at this initial state on the initial render so when the component first mounts however when the component first mounts here the imdb rating will still be undefined so this here is then false and so it will stay false forever becuase nowhere we update the state and on the second render so when we then finally get the movie data, this will not be executed again and so therefore it will stay false forever, now one way of fixing this would be to use a useeffect,
+  // useEffect(
+  //   function () {
+  //     setIsTop(imdbRating > 8);
+  //   },
+  //   [imdbRating]
+  // );
+  const isTop = imdbRating > 8;
+  console.log(isTop);
+
+  // const [avgRating, setAvgRating] = useState(0);
+
   function handleAdd() {
     const newWatchedMovie = {
       imdbID: selectedId,
@@ -244,7 +270,16 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
     };
 
     onAddWatched(newWatchedMovie);
-    onCloseMovie();
+    // onCloseMovie();
+
+    // setAvgRating(Number(imdbRating));
+    // alert(avgRating);
+    // well we still got the alert message with 0, and so that's again becuase the state is set asynchronously here or in other words we do not get access to the updated state right after doing that so right after we call the state updating function so only once react is done processing this event handler, it will then update all the state and rerender the UI
+
+    // setAvgRating((avgRating + userRating) / 2);
+    // no we get the avg = 5 which is (0 + 10)/2, but why is the avgRating still at 0 here even though we have updated it before, it is again because it is a asynchronous state setting which means that at this point here, the average rating has not been set yet so it's till at 0 which is the initial value right here and so because of that we say that the average rating state is stale at this point so we have stale state right here but luckily for us we already know how to solve this which is by passing a callback function and so that callback will get access to the current value:
+    // setAvgRating((avgRating) => (avgRating + userRating) / 2);
+    // so now we get the correct avg, so this time what happened was that the average was again set to the imdb rating, so the 8.6 but then in the next line here we already got access to that new value
   }
 
   useEffect(
@@ -316,6 +351,8 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
               </p>
             </div>
           </header>
+
+          {/* <p>{avgRating}</p> */}
 
           <section>
             <div className="rating">
