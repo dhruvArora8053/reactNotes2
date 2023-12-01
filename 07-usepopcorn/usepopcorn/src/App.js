@@ -161,6 +161,7 @@ export default function App() {
         return;
       }
 
+      handleCloseMovie();
       fetchMovies();
 
       return function () {
@@ -363,6 +364,30 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
     onAddWatched(newWatchedMovie);
     onCloseMovie();
   }
+
+  // Esc keypress event:
+  // so we are directly touching the DOM here which is the outside environment so for that we would need an effect:
+  useEffect(
+    function () {
+      function callback(e) {
+        if (e.code === "Escape") {
+          onCloseMovie();
+          console.log("Closing");
+        }
+      }
+
+      document.addEventListener("keydown", callback);
+      // so we are really doing basically now some dom manipulation and so we are stepping outside of react here, which is the reason why the react team also calls the useEffect hook here an escape hatch
+
+      // but now if we close another movie, then all of a sudden we get 10 logs and so it seems like these listeners are bascially accumulating so the reason for that is that actually each time that a new movie details component mounts, a new event listener is added to the document so basically always an additional one to the ones that we already have so again each time that this effect here is executed it will basically add one more event listener to the document and so if we open up 10 movies and then close them all, we will end up with 10 of the same event listeners attached to the document which ofcourse is not what we want and so what this means is that here we also need to clean up our event listeners or in other words we need to return a function here:
+
+      return function () {
+        document.removeEventListener("keydown", callback);
+      };
+      // so now as soon as the movie details component unmounts, the event listener will then again be removed from the document and so then we will avoid having so many event listeners in our DOM which might become a memory problem in a larger application with like hundereds or thousands of event listeners.
+    },
+    [onCloseMovie]
+  );
 
   useEffect(
     function () {
