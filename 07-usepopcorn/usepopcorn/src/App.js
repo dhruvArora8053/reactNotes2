@@ -115,16 +115,20 @@ export default function App() {
     setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   }
 
-  const tempQuery = "interstellar";
+  // const tempQuery = "interstellar";
   useEffect(
     function () {
+      const controller = new AbortController();
+      // this is actually a broser API so this has nothing to do with react but with the browser itself
+
       async function fetchMovies() {
         try {
           setIsLoading(true);
           setError("");
 
           const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`,
+            { signal: controller.signal }
           );
 
           if (!res.ok)
@@ -135,13 +139,17 @@ export default function App() {
           if (data.Response === "False") throw new Error("Movie not found");
 
           setMovies(data.Search);
+          setError("");
           // console.log(data);
 
           // console.log(movies);
           // now why are we getting empty array: after the state has been set in the setMovies that doesn't means data fetchs immediately so this will happen after this function here is called and so right now in console.log we have a stale state which basically means that we still have the old value as the state was before and in this case before it was just an empty array so our initial state
         } catch (err) {
           // console.err(err.message);
-          setError(err.message);
+          // now the problem with this is that as soon as a request get canceled, javascript actually sees that as an error and so that's why we get the error into movie list, so basically above fetch request as it is canceled it will throw an error which will then immediately go here into our catch block where the error is set and so that's why we can see this error into the application 'The user aborted a request' however, this is not really an error here in our application and so we want to ignore that so what we can do in order to do that:
+          if (err.name !== "AbortError") {
+            setError(err.message);
+          }
         } finally {
           setIsLoading(false);
         }
@@ -154,6 +162,13 @@ export default function App() {
       }
 
       fetchMovies();
+
+      return function () {
+        controller.abort();
+      };
+      // Race condition:
+      // by using this you see that all these other ones which are not the last one got cancelled and so we can now see that now we no longer have all these different requests happening at the same time, and then finally the last one that we were actually interested in was ofcourse not canceled, but here we can clearly se that there is basically only one request happening at the time until it then got canceled by the next one.
+      // so let's see why this is actually working so each time that there is a new keystroke, the component gets rerendered and as we alreay know between each of these rerenders the cleanup funciton here will get called and so what that means is that each time that there is a new keystroke, so a new rerender our controller will abort the current fetch request and so that is exactly what we want, we want to cancel the current request each time that the new one comes in and so that is exactly the point in time in which our cleanup function gets called
     },
     [query]
   );
@@ -381,7 +396,8 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
     },
     [title]
   );
-
+  // as we learned in the previous lecture this cleanup function here will actually run after the component has already unmounted and so if that's the case then how will the function actually remember this title here: closures
+  // the cleanup function also runs between renders so basically after each rerender so if we click on some movie and then we click on another one then you see the cleanup function actually run again for this movie and so that happened right after the rerender
   return (
     <div className="details">
       {isLoading ? (
