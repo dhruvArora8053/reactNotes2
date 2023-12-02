@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
+import userEvent from "@testing-library/user-event";
 
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
@@ -46,7 +47,7 @@ export default function App() {
     },
     [watched]
   );
-  // this is a great advantage of having used the useEffect hook instead of setting local state right here in the event handler because if we had done it like in the state, then we would also have to manually set the local storage there as we deleted a movie, but now here since we have basically synchronized the two of them, we no longer need to do that 
+  // this is a great advantage of having used the useEffect hook instead of setting local state right here in the event handler because if we had done it like in the state, then we would also have to manually set the local storage there as we deleted a movie, but now here since we have basically synchronized the two of them, we no longer need to do that
 
   useEffect(
     function () {
@@ -166,6 +167,28 @@ function Logo() {
 }
 
 function Search({ query, setQuery }) {
+  // useEffect(function () {
+  //   const el = document.querySelector(".search");
+  //   console.log(el);
+  //   el.focus();
+  // }, []);
+  // however, as we learned at the very beginning, React is all about being declarative and so manually selecting a DOM element like this is not really the react way of doing things, so it's not in line with the rest of our react code so in react we really don't want to manually add event listeners like above and also having to add classes or ids just for the purpose of selecting is not really nice and again not really the react way of doing things and also if for some reason we would need some dependency here for ex: if this code should rerun each time the query changes, then that would mean that we would select the element here over and over again, which is also not ideal and to solve all these problems and to make the action of selecting an element more declarative such as everything else in react, we need the concept of refs:
+
+  const inputEl = useRef(null);
+
+  useEffect(function () {
+    function callback(e) {
+      console.log(inputEl.current);
+      if (e.code === "Enter") {
+        inputEl.current.focus();
+        setQuery("");
+      }
+    }
+    document.addEventListener("keydown", callback);
+    return () => document.addEventListener("keydown", callback);
+  }, []);
+  // now we successfully connected the ref that we created here with the below DOM element so simply by passing this ref into the ref prop and so then in a useEffect after the dom has been loaded, we can use this dom element inside the ref.current property
+
   return (
     <input
       className="search"
@@ -173,6 +196,7 @@ function Search({ query, setQuery }) {
       placeholder="Search movies..."
       value={query}
       onChange={(e) => setQuery(e.target.value)}
+      ref={inputEl}
     />
   );
 }
