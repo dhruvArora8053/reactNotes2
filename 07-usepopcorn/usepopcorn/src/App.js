@@ -9,10 +9,16 @@ const KEY = "24a2b866";
 export default function App() {
   const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState(null);
+
+  // const [watched, setWatched] = useState([]);
+  const [watched, setWatched] = useState(function () {
+    const storedValue = localStorage.getItem("watched");
+    return JSON.parse(storedValue);
+    // react will call this function on the intial render and it will use whatever value is returned from this function as the initial value of the state and this function here actually needs to be a pure function and it cannot receive any arguments, so passing arguments in this function is  not going to work and also just like values that we pass in, react will only consider this function here on the initial render so this function is only executed once on the initial render and is simply ignored on subsequent rerenders
+  });
 
   function handleSelectMovie(id) {
     setSelectedId((selectedId) => (selectedId === id ? null : id));
@@ -26,13 +32,21 @@ export default function App() {
     setWatched((watched) => [...watched, movie]);
 
     // local storage is just a very simple key value pair storage that is available in the browser and where we can store some data for each domain so basically the data that we store in local storage now will only be available to exactly this application url
-    localStorage.setItem("watched", JSON.stringify([...watched, movie]));
+    // localStorage.setItem("watched", JSON.stringify([...watched, movie]));
     // we need to convert all of the data into string because in local storage we can only store key value pairs where the value is a string
   }
 
   function handleDeleteWatched(id) {
     setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   }
+
+  useEffect(
+    function () {
+      localStorage.setItem("watched", JSON.stringify(watched));
+    },
+    [watched]
+  );
+  // this is a great advantage of having used the useEffect hook instead of setting local state right here in the event handler because if we had done it like in the state, then we would also have to manually set the local storage there as we deleted a movie, but now here since we have basically synchronized the two of them, we no longer need to do that 
 
   useEffect(
     function () {
