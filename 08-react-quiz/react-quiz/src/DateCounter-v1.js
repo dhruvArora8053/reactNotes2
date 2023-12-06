@@ -1,34 +1,24 @@
 import { useReducer, useState } from "react";
+import { act } from "react-dom/test-utils";
 
-const initialState = { count: 0, step: 1 };
+// function reducer(state, action) {
+//   console.log(state, action);
+//   // as we print our output we get 0 1, meaining the state is 0 and the action is 1 so why is that, well it is because the reducer function gets access to the current state which right now is 0 so it is the initial state then it also gets access to the action, which right now is simpy 1 which we passed into the dispatch function so this dispatch in 1 is basically goint to become the action in the reducer and so the idea of the reducer is to take these tow things so the current state+ the action and based on that return the next state
+//   return state + action;
+// }
 
 function reducer(state, action) {
   console.log(state, action);
-  // if (action.type === "inc") return state + 1;
-  // if (action.type === "dec") return state - 1;
-  // if (action.type === "setCount") return action.payload;
-  switch (action.type) {
-    case "dec":
-      return { ...state, count: state.count - state.step };
-    case "inc":
-      return { ...state, count: state.count + state.step };
-    case "setCount":
-      return { ...state, count: action.payload };
-    case "setStep":
-      return { ...state, step: action.payload };
-    case "reset":
-      return initialState;
-    default:
-      throw new Error("Unknown action");
-  }
+  if (action.type === "inc") return state + 1;
+  if (action.type === "dec") return state - 1;
+  if (action.type === "setCount") return action.payload;
 }
 
 function DateCounter() {
   // const [count, setCount] = useState(0);
   // const [step, setStep] = useState(1);
-
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const { count, step } = state;
+  const [count, dispatch] = useReducer(reducer, 0);
+  // this dispatch function can also be used to update the state
 
   // This mutates the date object.
   const date = new Date("june 21 2027");
@@ -52,14 +42,12 @@ function DateCounter() {
   };
 
   const defineStep = function (e) {
-    dispatch({ type: "setStep", payload: Number(e.target.value) });
-    // setStep(Number(e.target.value));
+    setStep(Number(e.target.value));
   };
 
   const reset = function () {
-    dispatch({ type: "reset" });
     // setCount(0);
-    // setStep(1);
+    setStep(1);
   };
 
   return (
