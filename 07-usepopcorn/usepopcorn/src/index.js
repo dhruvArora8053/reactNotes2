@@ -5,6 +5,7 @@ import ReactDOM from "react-dom/client";
 // import App from "./App";
 import StarRating from "./StarRating";
 
+
 function Test() {
   const [movieRating, setMovieRating] = useState(0);
 
