@@ -119,7 +119,7 @@ export default function App() {
   useEffect(
     function () {
       const controller = new AbortController();
-      // this is actually a broser API so this has nothing to do with react but with the browser itself
+      // this is actually a broser API so this has nothing to do with react but with the browser itself, it helps in solving the race condition
 
       async function fetchMovies() {
         try {

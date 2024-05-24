@@ -9,16 +9,19 @@ const containerStyle = {
 
 const starContainerStyle = {
   display: "flex",
+  // gap: "4px",
 };
 
 StarRating.propTypes = {
   maxRating: PropTypes.number,
+  // .isRequired
   defaultRating: PropTypes.number,
   color: PropTypes.string,
   size: PropTypes.number,
   messages: PropTypes.array,
   className: PropTypes.string,
   onSetRating: PropTypes.func,
+  // .bool, .object
 };
 
 export default function StarRating({
@@ -33,9 +36,9 @@ export default function StarRating({
   const [rating, setRating] = useState(defaultRating);
   const [tempRating, setTempRating] = useState(0);
 
-  function handleStarRating(rating) {
+  function handleRating(rating) {
     setRating(rating);
-    onSetRating(rating);
+    onSetRating && onSetRating(rating);
   }
 
   const textStyle = {
@@ -51,10 +54,10 @@ export default function StarRating({
         {Array.from({ length: maxRating }, (_, i) => (
           <Star
             key={i}
-            onRating={() => handleStarRating(i + 1)}
             full={tempRating ? tempRating >= i + 1 : rating >= i + 1}
-            onTempRating={() => setTempRating(i + 1)}
-            onLeave={() => setTempRating(0)}
+            onRate={() => handleRating(i + 1)}
+            onHoverIn={() => setTempRating(i + 1)}
+            onHoverOut={() => setTempRating(0)}
             color={color}
             size={size}
           />
@@ -62,14 +65,14 @@ export default function StarRating({
       </div>
       <p style={textStyle}>
         {messages.length === maxRating
-          ? messages[tempRating ? tempRating - 1 : rating - 1]
+          ? messages[tempRating - 1] || messages[rating - 1] || ""
           : tempRating || rating || ""}
       </p>
     </div>
   );
 }
 
-function Star({ onRating, full, onTempRating, onLeave, color, size }) {
+function Star({ onRate, full, onHoverIn, onHoverOut, color, size }) {
   const starStyle = {
     width: `${size}px`,
     height: `${size}px`,
@@ -81,9 +84,9 @@ function Star({ onRating, full, onTempRating, onLeave, color, size }) {
     <span
       role="button"
       style={starStyle}
-      onClick={onRating}
-      onMouseEnter={onTempRating}
-      onMouseLeave={onLeave}
+      onClick={onRate}
+      onMouseEnter={onHoverIn}
+      onMouseLeave={onHoverOut}
     >
       {full ? (
         <svg
